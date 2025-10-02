@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dimonds Hotels — Bookings</title>
+  <style>
+    body{font-family:Inter,Arial;background:#f8fafc;margin:0;color:#0f172a}
+    .container{max-width:900px;margin:30px auto;padding:18px}
+    .card{background:#fff;padding:14px;border-radius:12px;box-shadow:0 10px 30px rgba(2,6,23,0.06)}
+    .muted{color:#475569}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{padding:10px;text-align:left;border-bottom:1px solid #f1f5f9}
+    .btn{padding:8px 10px;border-radius:8px;border:0;background:#0ea5a4;color:#fff;cursor:pointer}
+    .danger{background:#ef4444}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="index.html" class="muted">← Home</a>
+    <div style="height:12px"></div>
+    <div class="card">
+      <h2>Your Bookings</h2>
+      <div id="content"></div>
+    </div>
+  </div>
+ 
+<script>
+  const params=new URLSearchParams(location.search);
+  const bookingId=parseInt(params.get('bookingId'))||null;
+  let bookings = JSON.parse(localStorage.getItem('dimonds_bookings')||'[]');
+  const hotels = JSON.parse(localStorage.getItem('dimonds_hotels')||'[]');
+ 
+  function renderList(){
+    const wrap=document.getElementById('content');
+    if(bookings.length===0){wrap.innerHTML='<div class="muted">You have no bookings yet. Book a room to see it here.</div>';return}
+    let html = '<table><thead><tr><th>#</th><th>Hotel</th><th>Guest</th><th>Dates</th><th>Total</th><th></th></tr></thead><tbody>';
+    bookings.slice().reverse().forEach(b=>{
+      html += `<tr>
+        <td>${b.id}</td>
+        <td>${b.hotelName}</td>
+        <td>${b.name} <div class="muted" style="font-size:12px">${b.email}</div></td>
+        <td>${b.checkin || '-'} → ${b.checkout || '-'}</td>
+        <td>$${b.total.toFixed(2)}</td>
+        <td><button class="btn" onclick="viewDetails(${b.id})">View</button> <button class="btn danger" onclick="cancel(${b.id})">Cancel</button></td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    wrap.innerHTML = html;
+  }
+ 
+  function viewDetails(id){
+    const b = bookings.find(x=>x.id===id);
+    if(!b){alert('Booking not found'); return;}
+    const detail = `
+      <div style="margin-top:12px">
+        <h3>Booking #${b.id} — ${b.hotelName}</h3>
+        <div class="muted">Guest: ${b.name} • ${b.email}</div>
+        <div style="margin-top:8px">Rooms: ${b.rooms}</div>
+        <div style="margin-top:4px">Dates: ${b.checkin || '-'} → ${b.checkout || '-'}</div>
+        <div style="margin-top:4px">Special requests: ${b.requests || '-'}</div>
+        <div style="margin-top:8px;font-weight:700">Total paid: $${b.total.toFixed(2)}</div>
+        <div style="margin-top:8px"><button class="btn" onclick="closeDetails()">Close</button></div>
+      </div>
+    `;
+    document.getElementById('content').innerHTML = detail;
+  }
+ 
+  function closeDetails(){ renderList(); }
+ 
+  function cancel(id){
+    if(!confirm('Cancel this booking? This cannot be undone in this demo.')) return;
+    bookings = bookings.filter(b=>b.id!==id);
+    localStorage.setItem('dimonds_bookings', JSON.stringify(bookings));
+    renderList();
+  }
+ 
+  // If user just completed a booking, show confirmation
+  function maybeShowConfirmation(){
+    if(!bookingId) return;
+    const b = bookings.find(x=>x.id===bookingId);
+    if(!b) return;
+    document.getElementById('content').innerHTML = `
+      <div style="padding:12px;border-radius:10px;background:linear-gradient(90deg,#ecfdf5,#cffafe);box-shadow:inset 0 0 0 1px rgba(0,0,0,0.02)">
+        <h3>Booking confirmed! 🎉</h3>
+        <div class="muted">Booking ID: ${b.id}</div>
+        <div style="margin-top:8px">Hotel: <strong>${b.hotelName}</strong></div>
+        <div style="margin-top:4px">Guest: ${b.name} (${b.email})</div>
+        <div style="margin-top:4px">Dates: ${b.checkin || '-'} → ${b.checkout || '-'}</div>
+        <div style="margin-top:8px;font-weight:700">Total: $${b.total.toFixed(2)}</div>
+        <div style="margin-top:12px"><button class="btn" onclick="goToAll()">View all bookings</button></div>
+      </div>
+    `;
+  }
+ 
+  function goToAll(){ renderList(); }
+ 
+  // initial render
+  renderList();
+  maybeShowConfirmation();
+</script>
+</body>
+</html>
