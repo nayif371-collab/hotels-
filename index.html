@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dimonds Hotels — Search</title>
+  <style>
+    :root{--accent:#2b6cb0;--muted:#6b7280;--bg:#f6f8fb;--card:#ffffff}
+    *{box-sizing:border-box}
+    body{font-family:Inter,Segoe UI,Roboto,system-ui,Arial;background:linear-gradient(180deg,#eef2ff 0%,#f6fbff 100%);margin:0;color:#0f172a}
+    header{background:linear-gradient(90deg,var(--accent),#4c51bf);color:#fff;padding:28px 22px}
+    .container{max-width:1100px;margin:0 auto;padding:20px}
+    .brand{display:flex;gap:12px;align-items:center}
+    .brand h1{margin:0;font-size:22px;letter-spacing:0.6px}
+    .search-card{background:var(--card);padding:18px;border-radius:14px;margin-top:18px;box-shadow:0 8px 30px rgba(18,38,63,0.08)}
+    .row{display:flex;gap:12px;align-items:center}
+    .col{flex:1}
+    input,select{width:100%;padding:12px;border-radius:8px;border:1px solid #e6eef8;font-size:14px}
+    button.primary{background:var(--accent);color:#fff;padding:12px 18px;border-radius:10px;border:0;font-weight:600;cursor:pointer}
+    .featured{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:22px}
+    .card{background:var(--card);border-radius:12px;padding:12px;box-shadow:0 6px 20px rgba(17,24,39,0.06)}
+    .thumb{height:140px;border-radius:10px;background-image:linear-gradient(135deg,#f8fafc,#eef2ff);display:flex;align-items:end;padding:12px;color:#fff;font-weight:700}
+    .meta{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+    .small{font-size:13px;color:var(--muted)}
+    footer{padding:22px;text-align:center;color:var(--muted)}
+    @media (max-width:720px){.row{flex-direction:column}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="brand">
+        <div style="width:52px;height:52px;border-radius:12px;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-weight:700">D</div>
+        <h1>Dimonds Hotels</h1>
+      </div>
+    </div>
+  </header>
+  <main class="container">
+    <div class="search-card">
+      <form id="searchForm" onsubmit="event.preventDefault(); doSearch();">
+        <div class="row">
+          <div class="col">
+            <label class="small">Destination</label>
+            <input id="destination" placeholder="City or hotel name (e.g., Lahore)" required />
+          </div>
+          <div>
+            <label class="small">Check-in</label>
+            <input id="checkin" type="date" required />
+          </div>
+          <div>
+            <label class="small">Check-out</label>
+            <input id="checkout" type="date" required />
+          </div>
+          <div style="min-width:140px;display:flex;flex-direction:column;gap:6px;justify-content:flex-end">
+            <button class="primary" type="submit">Search Hotels</button>
+          </div>
+        </div>
+      </form>
+    </div>
+ 
+    <h2 style="margin-top:20px">Featured Hotels</h2>
+    <div class="featured" id="featuredList">
+      <!-- JS will render cards -->
+    </div>
+  </main>
+ 
+  <footer>
+    <div class="container">© Dimonds — Hotel Booking Platform</div>
+  </footer>
+ 
+  <script>
+    // Demo hotel data (stored to localStorage so other pages can read it)
+    const sampleHotels = [
+      {id:1,name:'Pearl Residency',city:'Lahore',price:78,rating:4.6,type:'Boutique',desc:'Central location, rooftop cafe',images:[]},
+      {id:2,name:'Oceanview Suites',city:'Karachi',price:95,rating:4.8,type:'Resort',desc:'Sea view, pool and spa',images:[]},
+      {id:3,name:'Green Garden Inn',city:'Islamabad',price:60,rating:4.3,type:'Budget',desc:'Family friendly, near parks',images:[]},
+      {id:4,name:'Royal Palace Hotel',city:'Lahore',price:120,rating:4.9,type:'Luxury',desc:'Five star amenities',images:[]}
+    ];
+ 
+    if(!localStorage.getItem('dimonds_hotels')){
+      localStorage.setItem('dimonds_hotels', JSON.stringify(sampleHotels));
+    }
+ 
+    const featured = JSON.parse(localStorage.getItem('dimonds_hotels')).slice(0,3);
+ 
+    function renderFeatured(){
+      const el=document.getElementById('featuredList');
+      el.innerHTML='';
+      featured.forEach(h=>{
+        const card=document.createElement('div');card.className='card';
+        card.innerHTML=`
+          <div class="thumb" style="background-image:linear-gradient(135deg, #c7e0ff, #7aa7ff);">
+            <div style="padding:10px">${h.name}</div>
+          </div>
+          <div style="padding:8px 6px">
+            <div style="font-weight:700">${h.name}</div>
+            <div class="small">${h.city} • ${h.type}</div>
+            <div class="meta"><div class="small">⭐ ${h.rating}</div><div style="font-weight:700">$${h.price}/night</div></div>
+            <div style="margin-top:8px"><button class="primary" onclick="goToHotel(${h.id})">View & Book</button></div>
+          </div>
+        `;
+        el.appendChild(card);
+      })
+    }
+ 
+    function doSearch(){
+      const dest=document.getElementById('destination').value.trim();
+      const checkin=document.getElementById('checkin').value;
+      const checkout=document.getElementById('checkout').value;
+      if(!dest||!checkin||!checkout){alert('Please fill all fields');return}
+      const q=new URLSearchParams({destination:dest,checkin,checkout}).toString();
+      // JS-based redirect to listings page as requested (no PHP)
+      window.location.href='listings.html?'+q;
+    }
+ 
+    function goToHotel(id){
+      const today=new Date().toISOString().slice(0,10);
+      const tomorrow=new Date(Date.now()+86400000).toISOString().slice(0,10);
+      window.location.href=`hotel.html?id=${id}&checkin=${today}&checkout=${tomorrow}`;
+    }
+ 
+    renderFeatured();
+  </script>
+</body>
+</html>
